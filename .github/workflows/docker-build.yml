@@ -10,36 +10,84 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Checkout Source Code
       - name: Checkout Repository
         uses: actions/checkout@v4
 
+      # Login to Docker Hub
       - name: Login to Docker Hub
         uses: docker/login-action@v3
         with:
           username: ${{ secrets.DOCKER_USERNAME }}
           password: ${{ secrets.DOCKER_PASSWORD }}
 
+      # Setup Docker Buildx
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v3
 
       ####################################################
-      # FRONTEND
+      # BUILD & PUSH FRONTEND
       ####################################################
 
-      - name: Build Frontend Image
+      - name: Build and Push Frontend
         uses: docker/build-push-action@v6
         with:
           context: .
           push: true
-          tags: saniyagandhi2507/netflix-frontend:latest
+          tags: |
+            saniyagandhi2507/netflix-frontend:${{ github.run_number }}
+            saniyagandhi2507/netflix-frontend:latest
 
       ####################################################
-      # BACKEND
+      # BUILD & PUSH BACKEND
       ####################################################
 
-      - name: Build Backend Image
+      - name: Build and Push Backend
         uses: docker/build-push-action@v6
         with:
           context: ./backend
           push: true
-          tags: saniyagandhi2507/netflix-backend:latest
+          tags: |
+            saniyagandhi2507/netflix-backend:${{ github.run_number }}
+            saniyagandhi2507/netflix-backend:latest
+
+      ####################################################
+      # CLONE GITOPS REPOSITORY
+      ####################################################
+
+      - name: Clone GitOps Repository
+        run: |
+          git clone https://x-access-token:${{ secrets.GITOPS_TOKEN }}@github.com/saniya2507/netflix-clone-gitops.git
+
+      ####################################################
+      # UPDATE IMAGE TAGS
+      ####################################################
+
+      - name: Update Frontend Image
+        run: |
+          sed -i "s|image: .*netflix-frontend.*|image: saniyagandhi2507/netflix-frontend:${{ github.run_number }}|g" netflix-clone-gitops/frontend-deployment.yaml
+
+      - name: Update Backend Image
+        run: |
+          sed -i "s|image: .*netflix-backend.*|image: saniyagandhi2507/netflix-backend:${{ github.run_number }}|g" netflix-clone-gitops/backend-deployment.yaml
+
+      ####################################################
+      # COMMIT CHANGES
+      ####################################################
+
+      - name: Commit Changes
+        run: |
+          cd netflix-clone-gitops
+          git config user.name "github-actions"
+          git config user.email "github-actions@github.com"
+          git add .
+          git commit -m "Update Docker image to build ${{ github.run_number }}" || echo "No changes"
+
+      ####################################################
+      # PUSH CHANGES
+      ####################################################
+
+      - name: Push Changes
+        run: |
+          cd netflix-clone-gitops
+          git push
