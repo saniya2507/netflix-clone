@@ -11,14 +11,18 @@ const movieRoutes = require("./routes/movieRoutes");
 
 dotenv.config();
 
-// Connect MongoDB
-connectDB();
-
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
+
+// Connect MongoDB (only if MONGO_URI is available)
+if (process.env.MONGO_URI) {
+  connectDB();
+} else {
+  console.log("⚠️ MONGO_URI not found. Starting backend without database connection.");
+}
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -31,6 +35,7 @@ app.get("/", (req, res) => {
   res.json({
     success: true,
     message: "Netflix Clone Backend Running",
+    database: process.env.MONGO_URI ? "Configured" : "Not Configured",
   });
 });
 
