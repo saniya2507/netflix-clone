@@ -9,7 +9,7 @@ function Navbar() {
         <ul className="nav-links">
           <li>Netflix Home</li>
           <li>TV Shows</li>
-          <li>Movies</li>
+          <li>Netflix Movies</li>
           <li>New & Popular</li>
           <li>My List</li>
         </ul>
