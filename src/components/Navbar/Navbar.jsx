@@ -7,7 +7,7 @@ function Navbar() {
         <h1 className="logo">NETFLIX</h1>
 
         <ul className="nav-links">
-          <li>SANIYA</li>
+          <li>Home</li>
           <li>TV Shows</li>
           <li>Movies</li>
           <li>New & Popular</li>
